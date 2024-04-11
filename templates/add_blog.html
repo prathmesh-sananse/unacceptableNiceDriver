@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Add Blog</title>
+  <link rel="stylesheet" type="text/css" href="{{url_for('static', filename='styles.css')}}">  
+</head>
+<body>
+    <h2>Add Blog</h2>
+    <form method="POST">
+        <label for="blog_name">Blog Name:</label><br>
+        <input type="text" id="blog_name" name="blog_name"><br>
+
+        <label for="preview">Preview:</label><br>
+        <textarea id="preview" name="preview"></textarea><br>
+
+        <label for="url">URL:</label><br>
+        <input type="text" id="url" name="url"><br>
+
+        <label for="owner">Owner:</label><br>
+        <input type="text" id="owner" name="owner"><br>
+      
+        <label for="publish_date">Publish Date:</label><br>
+        <input type="date" id="publish_date" name="publish_date"><br>
+
+        <label for="expire_date">Expire Date:</label><br>
+        <input type="date" id="expire_date" name="expire_date"><br>
+
+        <label for="category">Category:</label><br>
+        <select id="category" name="category">
+            {% for option in category_options %}
+            <option value="{{ option.category }}">{{ option.category }}</option>
+            {% endfor %}
+        </select><br>
+  
+        <label for="relevance">Relevance:</label><br>
+        <select id="relevance" name="relevance">
+            {% for option in relevance_options %}
+            <option value="{{ option.relevance }}">{{ option.relevance }}</option>
+            {% endfor %}
+        </select><br>
+  
+        <label for="target_audience">Target Audience:</label><br>
+        <select id="target_audience" name="target_audience">
+            {% for option in target_audience_options %}
+            <option value="{{ option.target_audience }}">{{ option.target_audience }}</option>
+            {% endfor %}
+        </select><br>
+  
+        <label for="region">Region:</label><br>
+        <select id="region" name="region">
+            {% for option in region_options %}
+            <option value="{{ option.region }}">{{ option.region }}</option>
+            {% endfor %}
+        </select><br>
+
+
+        <input type="submit" value="Submit">
+    </form>
+</body>
+</html>
