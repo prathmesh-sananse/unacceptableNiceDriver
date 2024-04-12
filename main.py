@@ -1,6 +1,8 @@
 from collections import defaultdict
 from flask import Flask, render_template, request, flash, redirect, jsonify
 from neo4j import GraphDatabase, basic_auth
+from datetime import datetime
+import plotly.graph_objs as go
 
 app = Flask(__name__)
 app.secret_key = 'your_secret_key_here'
@@ -150,6 +152,28 @@ def fetch_options():
     return jsonify(categories=categories, audience=audience, relevance=relevance, regions=regions)
 
 
+@app.route('/visualisation')
+def visualisation():
+  current_year= datetime.now().year
+
+  query = """
+  MATCH (b:blog) 
+  WHERE datetime({year: $year}) <= b.publish_date <= datetime({year: $year + 1})
+  RETURN date(datetime({year: $year, month: date(b.publish_date).month, day: 1})) as month, count(b) as num_blogs 
+  ORDER BY month 
+  """
+
+  data= session.run(query, year=current_year)
+  months=[]
+  num_blogs=[]
+  for record in data:
+    months.append(record['month'])
+    num_blogs.append(record['num_blogs'])
+
+  fig = go.Figure(data=go.Scatter(x=months, y=num_blogs, mode='lines+markers'))
+  fig.update_layout(title='Total Number of blogs published per month', xaxis_title='Month', yaxis_title='Number of blogs')
+
+  return render_template('visualisation.html', plot=fig.to_html())
 
 if __name__ == '__main__':
     app.secret_key = 'super_secret_key'
