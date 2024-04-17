@@ -1,0 +1,59 @@
+  /* Resetting default styles */
+  * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+  }
+
+  /* Global styles */
+  body {
+      font-family: Arial, sans-serif;
+      background-color: #f8f9fa;
+  }
+
+  .container {
+      display: flex;
+      max-width: 100%;
+      margin: auto auto;
+      background-color: #fff;
+      border-radius: 10px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  }
+
+  /* Navbar styles */
+  .navbar {
+      background-color: #343a40;
+      color: #fff;
+      padding: 10px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+  }
+
+  .nav-links a {
+      color: #fff;
+      text-decoration: none;
+      margin-left: 20px;
+  }
+
+  /* Side panel styles */
+  .side-panel {
+      width: 25%;
+      background-color: #495057;
+      padding: 10px;
+      color: #fff;
+  }
+
+  .side-panel h4 {
+      margin-bottom: 10px;
+  }
+
+  /* Main content styles */
+  .main-content {
+      width: 75%;
+      padding: 10px;
+  }
+
+  .plot {
+      margin-bottom: 10px;
+  }

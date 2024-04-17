@@ -1,20 +1,96 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Blog Visualization</title>
-    <!-- Plotly.js -->
+    <title>Interactive Plot</title>
     <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <link rel="stylesheet" type="text/css" href="{{url_for('static', filename='styles3.css')}}">  
 </head>
+
 <body>
-    <div id="plot"></div>
- 
+
+    <div class="navbar">
+        <h1 style="color: white;">ENPR+</h1>
+        <div class="nav-links">
+            <a href="#" id="home-link">Home</a>
+            <a href="/add_blog">Add Blog</a>
+            <a href="/visualisation">Visualisation</a>
+        </div>
+    </div>
+
+  <div class="container">
+      <aside class="side-panel">
+          <h4>Side Panel</h4>
+          <select id="graph-select">
+              <option value="monthly_plot">Number of Blogs per Month</option>
+              <option value="category_plot">Number of Blogs per Category</option>
+              <option value="region_plot">Number of Blogs per Region</option>
+              <option value="owner_plot">Number of Blogs per Owner</option>
+              <option value="audience_plot">Number of Blogs per Target Audience</option>
+              <option value="all-graphs">All Graphs</option>
+          </select>
+      </aside>
+
+      <main class="main-content">
+          <div id="monthly_plot" class="plot" style="display: block;"></div>
+          <div id="category_plot" class="plot" style="display: none;"></div>
+          <div id="region_plot" class="plot" style="display: none;"></div>
+          <div id="owner_plot" class="plot" style="display: none;"></div>
+          <div id="audience_plot" class="plot" style="display: none;"></div>
+          <div id="network_graph" class="plot"></div>
+      </main>
+  </div>
+
+
+  
     <script>
-        // Embed Plotly graph
-        var plot = "{{ plot | safe }}";  // safe filter to render HTML content
-        var plotDiv = document.getElementById('plot');
-        Plotly.newPlot(plotDiv, plot);
+        // Embed Plotly graph for monthly blogs
+        var monthly_graph_data = {{ monthly_graph_data | tojson | safe }};
+        var monthly_layout = {{ monthly_layout | tojson | safe }};
+        Plotly.newPlot("monthly_plot", monthly_graph_data, monthly_layout);
+  
+        // Embed Plotly graph for category blogs
+        var category_graph_data = {{ category_graph_data | tojson | safe }};
+        var category_layout = {{ category_layout | tojson | safe }};
+        Plotly.newPlot("category_plot", category_graph_data, category_layout);
+  
+        // Embed Plotly graph for region blogs
+        var region_graph_data = {{ region_graph_data | tojson | safe }};
+        var region_layout = {{ region_layout | tojson | safe }};
+        Plotly.newPlot("region_plot", region_graph_data, region_layout);
+  
+        // Embed Plotly graph for owner blogs
+        var owner_graph_data = {{ owner_graph_data | tojson | safe }};
+        var owner_layout = {{ owner_layout | tojson | safe }};
+        Plotly.newPlot("owner_plot", owner_graph_data, owner_layout);
+  
+        // Embed Plotly graph for target audience blogs
+        var audience_graph_data = {{ audience_graph_data | tojson | safe }};
+        var audience_layout = {{ audience_layout | tojson | safe }};
+        Plotly.newPlot("audience_plot", audience_graph_data, audience_layout);
+
+        // Embed Plotly graph for target audience blogs
+        var network_graph_data = {{ network_graph_data | tojson | safe }};
+        var network_layout = {{ network_layout | tojson | safe }};
+        Plotly.newPlot("network_graph", network_graph_data, network_layout);
+    </script>
+  
+    <script>
+      document.getElementById("graph-select").addEventListener("change", function() {
+          var selectedDivID = this.value;
+          var divs = document.querySelectorAll('div[id="monthly_plot"], div[id="category_plot"], div[id="region_plot"], div[id="owner_plot"],div[id="audience_plot"]');
+          divs.forEach(function(div){
+            if (div.id==selectedDivID || selectedDivID == "all-graphs"){
+              div.style.display = "block";
+            }
+            else {
+              div.style.display = "none";
+            }
+          });
+      });
     </script>
 </body>
+
 </html>

@@ -3,6 +3,7 @@ from flask import Flask, render_template, request, flash, redirect, jsonify
 from neo4j import GraphDatabase, basic_auth
 from datetime import datetime
 import plotly.graph_objs as go
+import networkx as nx
 
 app = Flask(__name__)
 app.secret_key = 'your_secret_key_here'
@@ -154,26 +155,202 @@ def fetch_options():
 
 @app.route('/visualisation')
 def visualisation():
-  current_year= datetime.now().year
+    # Query to retrieve total number of blogs published each month
+    monthly_query = """
+    MATCH (b:Blog) 
+    RETURN date(datetime({year: 2024, month: date(b.publish_date).month, day: 1})) as month, count(b) as num_blogs 
+    ORDER BY month 
+    """
 
-  query = """
-  MATCH (b:blog) 
-  WHERE datetime({year: $year}) <= b.publish_date <= datetime({year: $year + 1})
-  RETURN date(datetime({year: $year, month: date(b.publish_date).month, day: 1})) as month, count(b) as num_blogs 
-  ORDER BY month 
-  """
+    # Execute monthly query
+    monthly_data = session.run(monthly_query)
+    monthly_months = []
+    monthly_num_blogs = []
+    for record in monthly_data:
+        monthly_months.append(record['month'].strftime('%Y-%m-%d'))
+        monthly_num_blogs.append(record['num_blogs'])
 
-  data= session.run(query, year=current_year)
-  months=[]
-  num_blogs=[]
-  for record in data:
-    months.append(record['month'])
-    num_blogs.append(record['num_blogs'])
+    # Plotly graph data for monthly blogs
+    monthly_graph_data = [{
+        'x': monthly_months,
+        'y': monthly_num_blogs,
+        'type': 'bar',
+        'name': 'Monthly Blogs',
+        'marker': {'color': 'rgb(158,202,225)'}
+    }]
 
-  fig = go.Figure(data=go.Scatter(x=months, y=num_blogs, mode='lines+markers'))
-  fig.update_layout(title='Total Number of blogs published per month', xaxis_title='Month', yaxis_title='Number of blogs')
+    # Create Plotly layout for monthly graph
+    monthly_layout = {
+        'title': 'Number of Blogs per Month',
+        'xaxis': {'title': 'Month'},
+        'yaxis': {'title': 'Number of Blogs'}
+    }
 
-  return render_template('visualisation.html', plot=fig.to_html())
+    # Query to retrieve number of blogs per category
+    category_query = """
+    MATCH (b:Blog)-[:BELONGS_TO]->(c:Category)
+    RETURN c.name AS category, count(b) AS num_blogs
+    """
+
+    # Execute category query
+    category_data = session.run(category_query)
+    category_labels = []
+    category_num_blogs = []
+    for record in category_data:
+        category_labels.append(record['category'])
+        category_num_blogs.append(record['num_blogs'])
+
+    # Plotly graph data for category blogs
+    category_graph_data = [{
+        'x': category_labels,
+        'y': category_num_blogs,
+        'type': 'bar',
+        'name': 'Category Blogs',
+        'marker': {'color': 'rgb(255, 183, 50)'}
+    }]
+
+    # Create Plotly layout for category graph
+    category_layout = {
+        'title': 'Number of Blogs per Category',
+        'xaxis': {'title': 'Category'},
+        'yaxis': {'title': 'Number of Blogs'}
+    }
+
+    # Query to retrieve number of blogs per region
+    region_query = """
+    MATCH (b:Blog)-[:BELONGS_TO_REGION]->(r:Region)
+    RETURN r.name AS region, count(b) AS num_blogs
+    """
+
+    # Execute region query
+    region_data = session.run(region_query)
+    region_labels = []
+    region_num_blogs = []
+    for record in region_data:
+        region_labels.append(record['region'])
+        region_num_blogs.append(record['num_blogs'])
+
+    # Plotly graph data for region blogs
+    region_graph_data = [{
+        'x': region_labels,
+        'y': region_num_blogs,
+        'type': 'bar',
+        'name': 'Region Blogs',
+        'marker': {'color': 'rgb(50, 255, 50)'}
+    }]
+
+    # Create Plotly layout for region graph
+    region_layout = {
+        'title': 'Number of Blogs per Region',
+        'xaxis': {'title': 'Region'},
+        'yaxis': {'title': 'Number of Blogs'}
+    }
+
+    # Query to retrieve number of blogs per owner
+    owner_query = """
+    MATCH (b:Blog)
+    RETURN b.owner AS owner, count(b) AS num_blogs
+    """
+
+    # Execute owner query
+    owner_data = session.run(owner_query)
+    owner_labels = []
+    owner_num_blogs = []
+    for record in owner_data:
+        owner_labels.append(record['owner'])
+        owner_num_blogs.append(record['num_blogs'])
+
+    # Plotly graph data for owner blogs
+    owner_graph_data = [{
+        'x': owner_labels,
+        'y': owner_num_blogs,
+        'type': 'bar',
+        'name': 'Owner Blogs',
+        'marker': {'color': 'rgb(255, 50, 50)'}
+    }]
+
+    # Create Plotly layout for owner graph
+    owner_layout = {
+        'title': 'Number of Blogs per Owner',
+        'xaxis': {'title': 'Owner'},
+        'yaxis': {'title': 'Number of Blogs'}
+    }
+
+    # Query to retrieve number of blogs per target audience
+    audience_query = """
+    MATCH (b:Blog)-[:TARGETS]->(a:TargetAudience)
+    RETURN a.name AS audience, count(b) AS num_blogs
+    """
+
+    # Execute audience query
+    audience_data = session.run(audience_query)
+    audience_labels = []
+    audience_num_blogs = []
+    for record in audience_data:
+        audience_labels.append(record['audience'])
+        audience_num_blogs.append(record['num_blogs'])
+
+    # Plotly graph data for audience blogs
+    audience_graph_data = [{
+        'x': audience_labels,
+        'y': audience_num_blogs,
+        'type': 'bar',
+        'name': 'Target Audience Blogs',
+        'marker': {'color': 'rgb(50, 50, 255)'}
+    }]
+
+    # Create Plotly layout for audience graph
+    audience_layout = {
+        'title': 'Number of Blogs per Target Audience',
+        'xaxis': {'title': 'Target Audience'},
+        'yaxis': {'title': 'Number of Blogs'}
+    }
+
+
+    network_query = """
+    MATCH (b:Blog)-[:BELONGS_TO]->(c:Category)
+    MATCH (b)-[:BELONGS_TO_REGION]->(re:Region)
+    MATCH (b)-[:HAS_RELEVANCE]->(r:Relevance)
+    MATCH (b)-[:TARGETS]->(t:TargetAudience)
+    RETURN DISTINCT b.name AS blog, c.name AS category, re.name AS region, r.name AS relevance, t.name AS target_audience
+    """
+
+    # Execute query
+    network_data = session.run(network_query)
+
+    # Create nodes for the network graph
+    nodes = set()
+    edges=[]
+    for record in network_data:
+      nodes.add(record['blog'])
+      nodes.add(record['category'])
+      nodes.add(record['relevance'])
+      nodes.add(record['target_audience'])
+      nodes.add(record['region'])
+      edges.append((record['blog'], record['category']))
+      edges.append((record['blog'], record['relevance']))
+      edges.append((record['blog'], record['target_audience']))
+      edges.append((record['blog'], record['region']))
+
+    G = nx.Graph()
+    
+    # Create Plotly network graph
+    network_graph_data = [{
+      'type': 'scatter',
+      'x': [edge[0] for edge in edges],
+      'y': [edge[1] for edge in edges],
+      'mode': 'markers',
+      'hoverinfo': 'x+y',
+      'marker': {'size':10}
+    }]
+  
+    # Create Plotly layout
+    network_layout = {
+        'title': 'Network Graph of Blogs, Categories, Target Audience, Relevance and Regions',
+        'showlegend': False
+    }
+  
+    return render_template('visualisation.html', monthly_graph_data=monthly_graph_data, monthly_layout=monthly_layout, category_graph_data=category_graph_data, category_layout=category_layout, region_graph_data=region_graph_data, region_layout=region_layout, owner_graph_data=owner_graph_data, owner_layout=owner_layout, audience_graph_data=audience_graph_data, audience_layout=audience_layout,network_graph_data=network_graph_data, network_layout=network_layout)
 
 if __name__ == '__main__':
     app.secret_key = 'super_secret_key'
